@@ -1,5 +1,5 @@
 /**
- * Created by zhousony on 2016/12/13.
+ * Created by zhouyuson on 2016/12/13.
  * gulp 配置文件
  */
 var gulp         = require('gulp'),
