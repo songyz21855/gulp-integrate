@@ -10,10 +10,13 @@ var gulp         = require('gulp'),
     minifycss    = require('gulp-minify-css'),     // css文件压缩
     imagemin     = require('gulp-imagemin'),       // 图片压缩
     uglify       = require('gulp-uglify'),         // js文件压缩
+    concat       = require('gulp-concat'),         // 合并js文件
     cache        = require('gulp-cache'),          // 图片缓存，只有图片替换了才压缩
     less         = require('gulp-less'),           // less文件编译
     sass         = require('gulp-sass'),           // sass文件编译
-    watch        = require('gulp-watch');          // 文件监听
+    babel        = require('gulp-babel'),          // 编译ES6语法
+    watch        = require('gulp-watch'),          // 文件监听
+    livereload   = require('gulp-livereload');     // 自动刷新页面
 
 var gulpSrc  = './src',    // 源码目录
     gulpDist = './dist';   // 打包目录
@@ -26,19 +29,21 @@ var gulpPath = {
             '!' + gulpSrc + '/less/*_un.less'          // 不编译
         ],
         sass  : [
-            gulpPath + '/sass/**/*.{scss,sass}',
-            '!' + gulpPath + '/sass/**/*_un.{scss,sass}'     // 不编译
+            gulpPath + '/sass/**/*.scss',
+            '!' + gulpPath + '/sass/**/*_un.scss'     // 不编译
         ],
         images: [
             gulpSrc + '/images/**/**',
             '!' + gulpSrc + '/images/**/*.psd'         // 不编译
         ],
-        js    : gulpSrc + '/js/**/*.js'
+        js    : gulpSrc + '/js/**/*.js',
+        babel : gulpSrc + '/babel/**/*.js'
     },
     dist: {
         css   : gulpDist + '/css',
         images: gulpDist + '/images',
-        js    : gulpDist + '/js'
+        js    : gulpDist + '/js',
+        babel : gulpDist + '/babel'
     }
 }
 
@@ -57,7 +62,7 @@ gulp.task('less', function () {
         .pipe(notify({message: 'less 文件有更改!'}));
 });
 
-// 编译sass,scss文件
+// 编译scss文件
 gulp.task('sass',function () {
     return gulp.src(gulpPath.src.sass)
         .pipe(plumber())
@@ -89,10 +94,22 @@ gulp.task('images', function () {
 gulp.task('script', function () {
     return gulp.src(gulpPath.src.js)
         .pipe(plumber())
+        .pipe(concat('main.js'))
         .pipe(uglify())
         .pipe(gulp.dest(gulpPath.dist.js))
         .pipe(notify({message: 'scripts 文件有更改!'}));
 });
+
+// 编译ES6语法的文件
+gulp.task('babel',function () {
+    return gulp.src(gulpPath.src.babel)
+               .pipe(plumber())
+               .pipe(babel({
+                   presets: ['es2015']
+               }))
+               .pipe(gulp.dest(gulpPath.dist.babel))
+               .pipe(notify({message: 'ES6语法文件 文件有更改!'}));
+})
 
 // 文件监听
 gulp.task('watch', function () {
@@ -109,7 +126,18 @@ gulp.task('watch', function () {
     // 监听所有脚本文件
     gulp.watch(gulpPath.src.js, ['script']);
 
+    // 监听所有的ES6脚本文件
+    gulp.watch(gulpPath.src.babel, ['babel']);
+
+    // 建立即时重整服务器
+    var server = livereload();
+
+    // 看守所有位在 dist/  目录下的档案，一旦有更动，便进行重整
+    gulp.watch([gulpDist + '/**']).on('change', function(file) {
+        server.changed(file.path);
+    });
+
 });
 
 // 默认任务
-gulp.task('default', ['watch','less','sass','images', 'script']);
+gulp.task('default', ['watch','less','sass','images', 'script','babel']);
