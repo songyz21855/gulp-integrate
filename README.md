@@ -2,9 +2,7 @@
 <p align="center">
    <img height="257" width="114" src="https://github.com/zhouyuson/gulp-integrate/blob/master/dist/images/gulp.png">
 </p>
-
-[![NPM version][npm-image]][npm-url] [![NODE version][node-image]][node-url]
-<p align="center">基于gulp搭建的一个前端开发环境下编译源文件的基本配置，下载后进入目录运行npm install ,然后运行gulp</p>
+基于gulp搭建的一个前端开发环境下编译源文件的基本配置，下载后进入目录运行npm install ,然后运行gulp
 
 
 ## 为何要用构建工具?
