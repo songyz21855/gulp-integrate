@@ -1,6 +1,11 @@
 /**
  * Created by zhouyuson on 2016/12/13.
  * gulp 配置文件
+ * gulp.task(name[,deps],fn) 定义任务 name: 任务名称  deps: 依赖任务名称  fn:回调函数
+ * gulp.run(tasks...) 尽可能多的并行运行多个task
+ * gulp.watch(glob,fn) 当glob内容发生改变时，执行fn
+ * gulp.src(glob) 设置需要处理的文件的路径,可以是多个文件以数组的形式,也可以是正则
+ * gulp.dest(path[,options]) 设置生成文件的路径
  */
 var gulp         = require('gulp'),
     autoprefixer = require('gulp-autoprefixer'),   // 自动添加css前缀
@@ -16,7 +21,20 @@ var gulp         = require('gulp'),
     sass         = require('gulp-sass'),           // sass文件编译
     babel        = require('gulp-babel'),          // 编译ES6语法
     watch        = require('gulp-watch'),          // 文件监听
+    sourcemaps   = require('gulp-sourcemaps'),     // 源码压缩之后不易报错定位 sourcemaps用于错误查找
     livereload   = require('gulp-livereload');     // 自动刷新页面
+
+/* 使用gulp-load-plugins模块，可以加载package.json文件中所有的gulp模块 */
+/*var gulpLoadPlugins = require('gulp-load-plugins'),
+    plugins         = gulpLoadPlugins();
+
+gulp.task('script', function () {
+    return gulp.src(gulpPath.src.js)
+               .pipe(plugins.jshint())
+               .pipe(plugins.uglify())
+               .pipe(gulp.dest(gulpPath.dist.js));
+});*/
+/* end gulp-load-plugins模块 */
 
 var gulpSrc  = './src',    // 源码目录
     gulpDist = './dist';   // 打包目录
