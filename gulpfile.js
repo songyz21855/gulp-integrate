@@ -22,6 +22,7 @@ var gulp         = require('gulp'),
     babel        = require('gulp-babel'),          // 编译ES6语法
     watch        = require('gulp-watch'),          // 文件监听
     sourcemaps   = require('gulp-sourcemaps'),     // 源码压缩之后不易报错定位 sourcemaps用于错误查找
+    minifyHtml   = require('gulp-minify-html'),    // 压缩html文件
     livereload   = require('gulp-livereload');     // 自动刷新页面
 
 /* 使用gulp-load-plugins模块，可以加载package.json文件中所有的gulp模块 */
@@ -55,13 +56,15 @@ var gulpPath = {
             '!' + gulpSrc + '/images/**/*.psd'         // 不编译
         ],
         js    : gulpSrc + '/js/**/*.js',
-        babel : gulpSrc + '/babel/**/*.js'
+        babel : gulpSrc + '/babel/**/*.js',
+        html  : gulpSrc + '/html/**/*.html'
     },
     dist: {
         css   : gulpDist + '/css',
         images: gulpDist + '/images',
         js    : gulpDist + '/js',
-        babel : gulpDist + '/babel'
+        babel : gulpDist + '/babel',
+        html  : gulpDist + '/html'
     }
 }
 
@@ -108,6 +111,13 @@ gulp.task('images', function () {
         .pipe(notify({message: 'images 文件有更改!'}));
 });
 
+// html 文件压缩
+gulp.task('minifyHtml', function () {
+    return gulp.src(gulpPath.src.html)
+        .pipe(minifyHtml())
+        .pipe(gulp.dest(gulpPath.dist.html));
+});
+
 // 脚本代码合并压缩
 gulp.task('script', function () {
     return gulp.src(gulpPath.src.js)
@@ -150,7 +160,7 @@ gulp.task('watch', function () {
     // 建立即时重整服务器
     var server = livereload();
 
-    // 看守所有位在 dist/  目录下的档案，一旦有更动，便进行重整
+    // 监听所有位于 dist/  目录下的文件，一旦有更动，便进行重新刷新
     gulp.watch([gulpDist + '/**']).on('change', function(file) {
         server.changed(file.path);
     });
@@ -158,4 +168,4 @@ gulp.task('watch', function () {
 });
 
 // 默认任务
-gulp.task('default', ['watch','less','sass','images', 'script','babel']);
+gulp.task('default', ['watch','less','sass','images', 'script','babel','minifyHtml']);
