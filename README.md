@@ -9,16 +9,16 @@
    自动化。对于需要反复重复的任务，例如压缩（minification）、编译、单元测试等，自动化工具可以减轻你的劳动，简化你的工作。当你正确配置好了任务，就会自动帮你完成大部分无聊的工作。
 
 
-## 你需要知道的5个gulp命令
+## 你需要知道的4个gulp命令
 ```
  gulp.task(name[,deps],fn) 定义任务 name: 任务名称  deps: 依赖任务名称  fn:回调函数
- gulp.run(tasks...) 尽可能多的并行运行多个task
  gulp.watch(glob,fn) 当glob内容发生改变时，执行fn
  gulp.src(glob) 设置需要处理的文件的路径,可以是多个文件以数组的形式,也可以是正则
  gulp.dest(path[,options]) 设置生成文件的路径
 ```
 
 ## `gulpfile.js`
+根据功能模块分开写实例，具体情况在根据项目需要进行组合
 ```js
 var gulp         = require('gulp'),
     autoprefixer = require('gulp-autoprefixer'),   // 自动添加css前缀

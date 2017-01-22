@@ -23,6 +23,9 @@ var gulp         = require('gulp'),
     watch        = require('gulp-watch'),          // 文件监听
     sourcemaps   = require('gulp-sourcemaps'),     // 源码压缩之后不易报错定位 sourcemaps用于错误查找
     minifyHtml   = require('gulp-minify-html'),    // 压缩html文件
+    pug          = require('gulp-pug'),            // 编译pug文件(jade已经改名pug)
+    htmlBeautify = require('gulp-html-beautify'),  // 格式化html代码
+    htmlmin      = require('gulp-htmlmin'),        // 对html文件进行压缩,去除页面空格、注释，删除多余属性等操作
     livereload   = require('gulp-livereload');     // 自动刷新页面
 
 /* 使用gulp-load-plugins模块，可以加载package.json文件中所有的gulp模块 */
@@ -57,14 +60,16 @@ var gulpPath = {
         ],
         js    : gulpSrc + '/js/**/*.js',
         babel : gulpSrc + '/babel/**/*.js',
-        html  : gulpSrc + '/html/**/*.html'
+        html  : gulpSrc + '/html/**/*.html',
+        pug   : gulpSrc + '/pug/**/*.pug'
     },
     dist: {
         css   : gulpDist + '/css',
         images: gulpDist + '/images',
         js    : gulpDist + '/js',
         babel : gulpDist + '/babel',
-        html  : gulpDist + '/html'
+        html  : gulpDist + '/html',
+        pug   : gulpDist + '/pug'
     }
 }
 
@@ -136,7 +141,34 @@ gulp.task('babel',function () {
                    presets: ['es2015']
                }))
                .pipe(gulp.dest(gulpPath.dist.babel))
-               .pipe(notify({message: 'ES6语法文件 文件有更改!'}));
+               .pipe(notify({message: 'ES6语法文件有更改!'}));
+});
+
+var htmlMinOptions = {
+    removeComments: true,                 // 清除HTML注释
+    collapseWhitespace: false,            // 压缩HTML
+    collapseBooleanAttributes: true,      // 省略布尔属性的值 <input checked="true"/> ==> <input />
+    removeEmptyAttributes: true,          // 删除所有空格作属性值 <input id="" /> ==> <input />
+    removeScriptTypeAttributes: true,     // 删除<script>的type="text/javascript"
+    removeStyleLinkTypeAttributes: true,  // 删除<style>和<link>的type="text/css"
+    minifyJS: true,                       // 压缩页面JS
+    minifyCSS: true                       // 压缩页面CSS
+}
+
+// 编译pug文件
+gulp.task('pug',function () {
+    return gulp.src(gulpPath.src.pug)
+                  .pipe(plumber())
+                  .pipe(pug())
+                  .pipe(htmlBeautify({
+                      indent_size: 4,
+                      indent_char: ' ',
+                      unformatted: true,  // 让一个标签独占一行
+                      extra_liners: []    // 默认情况下，body | head 标签前会有一行空格
+                  }))
+                  .pipe(htmlmin(htmlMinOptions))
+                  .pipe(gulp.dest(gulpPath.dist.pug))
+                  .pipe(notify({message: 'pug文件有更改!'}));
 })
 
 // 文件监听
@@ -168,4 +200,4 @@ gulp.task('watch', function () {
 });
 
 // 默认任务
-gulp.task('default', ['watch','less','sass','images', 'script','babel','minifyHtml']);
+gulp.task('default', ['watch','less','sass','images', 'script','babel','minifyHtml','pug']);
