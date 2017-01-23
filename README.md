@@ -22,7 +22,7 @@
  - 本实例使用webpack-stream将webpack跟gulp整合集成，但并不怎么建议使用，因为有如下两个缺点:
    1.关闭webpack的监听模式，每次文件变动就会重新全盘编译文件，很耗时。
    2.不关闭webpack的监听模式，就会会阻塞其他任务，导致其他任务的监听失效。
--  所以建议直接使用webpack原生方案
+ - 所以建议直接使用webpack原生方案
 ```js
 var gulp          = require('gulp'),
     autoprefixer  = require('gulp-autoprefixer'),   // 自动添加css前缀
