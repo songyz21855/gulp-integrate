@@ -42,12 +42,15 @@
 /************************************************************************/
 /******/ ([
 /* 0 */
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
 
 	/**
-	 * Created by zhouyuson on 17/1/19.
+	 * Created by zhouyuson on 17/1/23.
 	 */
-	console.log('这是test1');
+	var tab = __webpack_require__(!(function webpackMissingModule() { var e = new Error("Cannot find module \"tab\""); e.code = 'MODULE_NOT_FOUND'; throw e; }()));
+	tab();
+
+	console.log('这是common.js规范的文件')
 
 
 /***/ }

@@ -7,26 +7,28 @@
  * gulp.src(glob) 设置需要处理的文件的路径,可以是多个文件以数组的形式,也可以是正则
  * gulp.dest(path[,options]) 设置生成文件的路径
  */
-var gulp         = require('gulp'),
-    autoprefixer = require('gulp-autoprefixer'),   // 自动添加css前缀
-    notify       = require('gulp-notify'),         // 更改提醒
-    rename       = require('gulp-rename'),         // 重命名
-    plumber      = require('gulp-plumber'),        // 阻止gulp插件发生错误导致进程退出并输出错误日志
-    minifycss    = require('gulp-minify-css'),     // css文件压缩
-    imagemin     = require('gulp-imagemin'),       // 图片压缩
-    uglify       = require('gulp-uglify'),         // js文件压缩
-    concat       = require('gulp-concat'),         // 合并js文件
-    cache        = require('gulp-cache'),          // 图片缓存，只有图片替换了才压缩
-    less         = require('gulp-less'),           // less文件编译
-    sass         = require('gulp-sass'),           // sass文件编译
-    babel        = require('gulp-babel'),          // 编译ES6语法
-    watch        = require('gulp-watch'),          // 文件监听
-    sourcemaps   = require('gulp-sourcemaps'),     // 源码压缩之后不易报错定位 sourcemaps用于错误查找
-    minifyHtml   = require('gulp-minify-html'),    // 压缩html文件
-    pug          = require('gulp-pug'),            // 编译pug文件(jade已经改名pug)
-    htmlBeautify = require('gulp-html-beautify'),  // 格式化html代码
-    htmlmin      = require('gulp-htmlmin'),        // 对html文件进行压缩,去除页面空格、注释，删除多余属性等操作
-    livereload   = require('gulp-livereload');     // 自动刷新页面
+var gulp          = require('gulp'),
+    autoprefixer  = require('gulp-autoprefixer'),   // 自动添加css前缀
+    notify        = require('gulp-notify'),         // 更改提醒
+    rename        = require('gulp-rename'),         // 重命名
+    plumber       = require('gulp-plumber'),        // 阻止gulp插件发生错误导致进程退出并输出错误日志
+    minifycss     = require('gulp-minify-css'),     // css文件压缩
+    imagemin      = require('gulp-imagemin'),       // 图片压缩
+    uglify        = require('gulp-uglify'),         // js文件压缩
+    concat        = require('gulp-concat'),         // 合并js文件
+    cache         = require('gulp-cache'),          // 图片缓存，只有图片替换了才压缩
+    less          = require('gulp-less'),           // less文件编译
+    sass          = require('gulp-sass'),           // sass文件编译
+    babel         = require('gulp-babel'),          // 编译ES6语法
+    watch         = require('gulp-watch'),          // 文件监听
+    sourcemaps    = require('gulp-sourcemaps'),     // 源码压缩之后不易报错定位 sourcemaps用于错误查找
+    minifyHtml    = require('gulp-minify-html'),    // 压缩html文件
+    pug           = require('gulp-pug'),            // 编译pug文件(jade已经改名pug)
+    htmlBeautify  = require('gulp-html-beautify'),  // 格式化html代码
+    htmlmin       = require('gulp-htmlmin'),        // 对html文件进行压缩,去除页面空格、注释，删除多余属性等操作
+    livereload    = require('gulp-livereload'),     // 自动刷新页面
+    webpackStream = require('webpack-stream'),      // gulp与webpack集成配置
+    webpackConfig = require('./webpack.config');    // 引入webpack基本配置文件
 
 /* 使用gulp-load-plugins模块，可以加载package.json文件中所有的gulp模块 */
 /*var gulpLoadPlugins = require('gulp-load-plugins'),
@@ -61,7 +63,8 @@ var gulpPath = {
         js    : gulpSrc + '/js/**/*.js',
         babel : gulpSrc + '/babel/**/*.js',
         html  : gulpSrc + '/html/**/*.html',
-        pug   : gulpSrc + '/pug/**/*.pug'
+        pug   : gulpSrc + '/pug/**/*.pug',
+        common: gulpSrc + '/common/**/*.js'
     },
     dist: {
         css   : gulpDist + '/css',
@@ -69,7 +72,8 @@ var gulpPath = {
         js    : gulpDist + '/js',
         babel : gulpDist + '/babel',
         html  : gulpDist + '/html',
-        pug   : gulpDist + '/pug'
+        pug   : gulpDist + '/pug',
+        common: gulpDist + '/common'
     }
 }
 
@@ -169,6 +173,15 @@ gulp.task('pug',function () {
                   .pipe(htmlmin(htmlMinOptions))
                   .pipe(gulp.dest(gulpPath.dist.pug))
                   .pipe(notify({message: 'pug文件有更改!'}));
+});
+
+// 编译common.js规范的js文件
+gulp.task('webpackStream',function () {
+    return gulp.src(gulpPath.src.common)
+               .pipe(plumber())
+               .pipe(webpackStream(webpackConfig))
+               .pipe(gulp.dest(gulpPath.dist.common))
+               .pipe(notify({message: 'common.js规范文件有更改!'}));
 })
 
 // 文件监听
@@ -200,4 +213,4 @@ gulp.task('watch', function () {
 });
 
 // 默认任务
-gulp.task('default', ['watch','less','sass','images', 'script','babel','minifyHtml','pug']);
+gulp.task('default', ['watch','less','sass','images', 'script','babel','minifyHtml','pug','webpackStream']);

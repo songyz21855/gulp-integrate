@@ -18,24 +18,34 @@
 ```
 
 ## `gulpfile.js`
-根据功能模块分开写实例，具体情况在根据项目需要进行组合
+ - 根据功能模块分开写实例，具体情况再根据项目需要分别进行组合
+ - 本实例使用webpack-stream将webpack跟gulp整合集成，但并不怎么建议使用，因为有如下两个缺点:
+   1.关闭webpack的监听模式，每次文件变动就会重新全盘编译文件，很耗时。
+   2.不关闭webpack的监听模式，就会会阻塞其他任务，导致其他任务的监听失效。
+-  所以建议直接使用webpack原生方案
 ```js
-var gulp         = require('gulp'),
-    autoprefixer = require('gulp-autoprefixer'),   // 自动添加css前缀
-    notify       = require('gulp-notify'),         // 更改提醒
-    rename       = require('gulp-rename'),         // 重命名
-    plumber      = require('gulp-plumber'),        // 阻止gulp插件发生错误导致进程退出并输出错误日志
-    minifycss    = require('gulp-minify-css'),     // css文件压缩
-    imagemin     = require('gulp-imagemin'),       // 图片压缩
-    uglify       = require('gulp-uglify'),         // js文件压缩
-    concat       = require('gulp-concat'),         // 合并js文件
-    cache        = require('gulp-cache'),          // 图片缓存，只有图片替换了才压缩
-    less         = require('gulp-less'),           // less文件编译
-    sass         = require('gulp-sass'),           // sass文件编译
-    babel        = require('gulp-babel'),          // 编译ES6语法
-    watch        = require('gulp-watch'),          // 文件监听
-    sourcemaps   = require('gulp-sourcemaps'),     // 源码压缩之后不易报错定位 sourcemaps用于错误查找
-    livereload   = require('gulp-livereload');     // 自动刷新页面
+var gulp          = require('gulp'),
+    autoprefixer  = require('gulp-autoprefixer'),   // 自动添加css前缀
+    notify        = require('gulp-notify'),         // 更改提醒
+    rename        = require('gulp-rename'),         // 重命名
+    plumber       = require('gulp-plumber'),        // 阻止gulp插件发生错误导致进程退出并输出错误日志
+    minifycss     = require('gulp-minify-css'),     // css文件压缩
+    imagemin      = require('gulp-imagemin'),       // 图片压缩
+    uglify        = require('gulp-uglify'),         // js文件压缩
+    concat        = require('gulp-concat'),         // 合并js文件
+    cache         = require('gulp-cache'),          // 图片缓存，只有图片替换了才压缩
+    less          = require('gulp-less'),           // less文件编译
+    sass          = require('gulp-sass'),           // sass文件编译
+    babel         = require('gulp-babel'),          // 编译ES6语法
+    watch         = require('gulp-watch'),          // 文件监听
+    sourcemaps    = require('gulp-sourcemaps'),     // 源码压缩之后不易报错定位 sourcemaps用于错误查找
+    minifyHtml    = require('gulp-minify-html'),    // 压缩html文件
+    pug           = require('gulp-pug'),            // 编译pug文件(jade已经改名pug)
+    htmlBeautify  = require('gulp-html-beautify'),  // 格式化html代码
+    htmlmin       = require('gulp-htmlmin'),        // 对html文件进行压缩,去除页面空格、注释，删除多余属性等操作
+    livereload    = require('gulp-livereload'),     // 自动刷新页面
+    webpackStream = require('webpack-stream'),      // gulp与webpack集成配置
+    webpackConfig = require('./webpack.config');    // 引入webpack基本配置文件
 
 /* 使用gulp-load-plugins模块，可以加载package.json文件中所有的gulp模块 */
 /*var gulpLoadPlugins = require('gulp-load-plugins'),
@@ -68,13 +78,19 @@ var gulpPath = {
             '!' + gulpSrc + '/images/**/*.psd'         // 不编译
         ],
         js    : gulpSrc + '/js/**/*.js',
-        babel : gulpSrc + '/babel/**/*.js'
+        babel : gulpSrc + '/babel/**/*.js',
+        html  : gulpSrc + '/html/**/*.html',
+        pug   : gulpSrc + '/pug/**/*.pug',
+        common: gulpSrc + '/common/**/*.js'
     },
     dist: {
         css   : gulpDist + '/css',
         images: gulpDist + '/images',
         js    : gulpDist + '/js',
-        babel : gulpDist + '/babel'
+        babel : gulpDist + '/babel',
+        html  : gulpDist + '/html',
+        pug   : gulpDist + '/pug',
+        common: gulpDist + '/common'
     }
 }
 
@@ -121,6 +137,13 @@ gulp.task('images', function () {
         .pipe(notify({message: 'images 文件有更改!'}));
 });
 
+// html 文件压缩
+gulp.task('minifyHtml', function () {
+    return gulp.src(gulpPath.src.html)
+        .pipe(minifyHtml())
+        .pipe(gulp.dest(gulpPath.dist.html));
+});
+
 // 脚本代码合并压缩
 gulp.task('script', function () {
     return gulp.src(gulpPath.src.js)
@@ -139,7 +162,43 @@ gulp.task('babel',function () {
                    presets: ['es2015']
                }))
                .pipe(gulp.dest(gulpPath.dist.babel))
-               .pipe(notify({message: 'ES6语法文件 文件有更改!'}));
+               .pipe(notify({message: 'ES6语法文件有更改!'}));
+});
+
+var htmlMinOptions = {
+    removeComments: true,                 // 清除HTML注释
+    collapseWhitespace: false,            // 压缩HTML
+    collapseBooleanAttributes: true,      // 省略布尔属性的值 <input checked="true"/> ==> <input />
+    removeEmptyAttributes: true,          // 删除所有空格作属性值 <input id="" /> ==> <input />
+    removeScriptTypeAttributes: true,     // 删除<script>的type="text/javascript"
+    removeStyleLinkTypeAttributes: true,  // 删除<style>和<link>的type="text/css"
+    minifyJS: true,                       // 压缩页面JS
+    minifyCSS: true                       // 压缩页面CSS
+}
+
+// 编译pug文件
+gulp.task('pug',function () {
+    return gulp.src(gulpPath.src.pug)
+                  .pipe(plumber())
+                  .pipe(pug())
+                  .pipe(htmlBeautify({
+                      indent_size: 4,
+                      indent_char: ' ',
+                      unformatted: true,  // 让一个标签独占一行
+                      extra_liners: []    // 默认情况下，body | head 标签前会有一行空格
+                  }))
+                  .pipe(htmlmin(htmlMinOptions))
+                  .pipe(gulp.dest(gulpPath.dist.pug))
+                  .pipe(notify({message: 'pug文件有更改!'}));
+});
+
+// 编译common.js规范的js文件
+gulp.task('webpackStream',function () {
+    return gulp.src(gulpPath.src.common)
+               .pipe(plumber())
+               .pipe(webpackStream(webpackConfig))
+               .pipe(gulp.dest(gulpPath.dist.common))
+               .pipe(notify({message: 'common.js规范文件有更改!'}));
 })
 
 // 文件监听
@@ -163,7 +222,7 @@ gulp.task('watch', function () {
     // 建立即时重整服务器
     var server = livereload();
 
-    // 看守所有位在 dist/  目录下的档案，一旦有更动，便进行重整
+    // 监听所有位于 dist/  目录下的文件，一旦有更动，便进行重新刷新
     gulp.watch([gulpDist + '/**']).on('change', function(file) {
         server.changed(file.path);
     });
@@ -171,5 +230,5 @@ gulp.task('watch', function () {
 });
 
 // 默认任务
-gulp.task('default', ['watch','less','sass','images', 'script','babel']);
+gulp.task('default', ['watch','less','sass','images', 'script','babel','minifyHtml','pug','webpackStream']);
 ```
