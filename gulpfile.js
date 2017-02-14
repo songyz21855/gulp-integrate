@@ -27,6 +27,7 @@ var gulp          = require('gulp'),
     htmlBeautify  = require('gulp-html-beautify'),  // 格式化html代码
     htmlmin       = require('gulp-htmlmin'),        // 对html文件进行压缩,去除页面空格、注释，删除多余属性等操作
     livereload    = require('gulp-livereload'),     // 自动刷新页面
+    cmdPack       = require('gulp-cmd-pack'),       // cmd打包
     webpackStream = require('webpack-stream'),      // gulp与webpack集成配置
     webpackConfig = require('./webpack.config');    // 引入webpack基本配置文件
 
@@ -73,7 +74,8 @@ var gulpPath = {
         babel : gulpDist + '/babel',
         html  : gulpDist + '/html',
         pug   : gulpDist + '/pug',
-        common: gulpDist + '/common'
+        common: gulpDist + '/common',
+        cmd   : gulpDist + '/cmd'
     }
 }
 
@@ -182,6 +184,15 @@ gulp.task('webpackStream',function () {
                .pipe(webpackStream(webpackConfig))
                .pipe(gulp.dest(gulpPath.dist.common))
                .pipe(notify({message: 'common.js规范文件有更改!'}));
+});
+
+// 打包cmd模块
+gulp.task('cmd',function () {
+    return gulp.src('./src/cmd/c.js')
+               .pipe(cmdPack({
+                   mainId:'./dist/cmd/c.js',
+                   base:'./src/cmd/'
+               })).pipe(gulp.dest(gulpPath.dist.cmd))
 })
 
 // 文件监听
@@ -213,4 +224,4 @@ gulp.task('watch', function () {
 });
 
 // 默认任务
-gulp.task('default', ['watch','less','sass','images', 'script','babel','minifyHtml','pug','webpackStream']);
+gulp.task('default', ['watch','less','sass','images', 'script','babel','minifyHtml','pug','webpackStream','cmd']);
